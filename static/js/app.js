@@ -59,26 +59,39 @@ class GameManager {
         this.games.forEach(game => {
             const progress = this.calculateProgress(game.achievements);
 
+            // Logic to determine bar color based on completion
+            const barColorClass = progress === 100 ? 'bg-success shadow-[0_0_10px_#03dac6]' : 'bg-brand';
+
             const gameCard = document.createElement('div');
-            gameCard.className = 'game-card';
+            // Tailwind Card Styling with hover lift
+            gameCard.className = 'bg-surface p-6 rounded-xl shadow-lg border border-gray-800 flex flex-col h-full transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-gray-600';
+
             gameCard.innerHTML = `
-                <h2>
-                ${game.title} 
-                    <div>
-                        <span class="progress" style="margin-right: 10px;">${progress}%</span>
-                        <button onclick="app.deleteGame(${game.id})" style="background: #cf6679; color: #000; border: none; padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Delete</button>
-                    </div>
-                </h2>
-                <div class="progress-bar-bg">
-                    <div class="progress-bar-fill" style="width: ${progress}%"></div>
+                <div class="flex justify-between items-start mb-4">
+                    <h2 class="text-xl font-bold text-gray-100 leading-tight">${game.title}</h2>
+                    <button onclick="app.deleteGame(${game.id})" class="text-gray-500 hover:text-red-400 transition-colors p-1" title="Delete Game">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
                 </div>
-                <ul class="achievement-list">
+
+                <div class="flex justify-between items-end mb-2">
+                    <span class="text-sm font-medium text-gray-400 uppercase tracking-wider">Completion</span>
+                    <span class="text-2xl font-extrabold ${progress === 100 ? 'text-success drop-shadow-md' : 'text-brand'}">${progress}%</span>
+                </div>
+
+                <div class="w-full bg-gray-800 rounded-full h-2.5 mb-6 overflow-hidden">
+                    <div class="h-2.5 rounded-full transition-all duration-700 ease-out ${barColorClass}" style="width: ${progress}%"></div>
+                </div>
+
+                <ul class="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
                     ${game.achievements.map(ach => `
-                        <li class="${ach.completed ? 'completed' : ''}">
-                            <input type="checkbox" 
-                                ${ach.completed ? 'checked' : ''} 
-                                onchange="app.toggleAchievement(${game.id}, ${ach.id})">
-                            ${ach.name}
+                        <li class="flex items-center gap-3 group cursor-pointer" onclick="app.toggleAchievement(${game.id}, ${ach.id})">
+                            <div class="relative flex items-center justify-center w-5 h-5 rounded border ${ach.completed ? 'border-success bg-success' : 'border-gray-500 group-hover:border-brand'} transition-colors duration-200">
+                                ${ach.completed ? `<svg class="w-3.5 h-3.5 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>` : ''}
+                            </div>
+                            <span class="select-none transition-all duration-200 ${ach.completed ? 'text-gray-500 line-through' : 'text-gray-300 group-hover:text-white'}">
+                                ${ach.name}
+                            </span>
                         </li>
                     `).join('')}
                 </ul>
@@ -165,12 +178,17 @@ class GameManager {
 
     showToast(message) {
         const toast = document.getElementById('toast');
-        toast.innerText = message;
-        toast.classList.add('show');
+        const toastMessage = document.getElementById('toast-message');
 
-        // Hide it after 3 seconds
+        toastMessage.innerText = message;
+
+        // Tailwind animation classes: remove translate-y-24 and opacity-0, add normal states
+        toast.classList.remove('translate-y-24', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+
         setTimeout(() => {
-            toast.classList.remove('show');
+            toast.classList.remove('translate-y-0', 'opacity-100');
+            toast.classList.add('translate-y-24', 'opacity-0');
         }, 3000);
     }
 }

@@ -1,38 +1,84 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Game Completion Board</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: '#bb86fc',     /* Your purple */
+            success: '#03dac6',   /* Your teal */
+            surface: '#1e1e1e',   /* Dark card background */
+            background: '#121212' /* Deepest background */
+          }
+        }
+      }
+    }
+  </script>
 </head>
 
-<body>
-  <header>
-    <h1>Completion Board</h1>
+<body class="bg-background text-gray-200 font-sans antialiased min-h-screen p-4 md:p-8">
+
+  <header class="max-w-6xl mx-auto mb-10 mt-4 flex justify-center">
+    <h1
+      class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-brand to-blue-500 tracking-tight drop-shadow-lg">
+      Completion Board
+    </h1>
   </header>
 
-  <main>
-    <div class="form-container" style="background: #1e1e1e; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
-      <h2 style="margin-bottom: 1rem;">Add a New Game</h2>
-      <form id="add-game-form" style="display: flex; flex-direction: column; gap: 1rem;">
-        <input type="text" id="game-title" placeholder="Game Title (e.g., Sifu or Batman: Arkham)" required
-          style="padding: 0.5rem; background: #333; color: white; border: none; border-radius: 4px;">
-        <textarea id="game-achievements" rows="4" placeholder="List achievements here (press Enter for a new line)"
-          required
-          style="padding: 0.5rem; background: #333; color: white; border: none; border-radius: 4px;"></textarea>
+  <main class="max-w-6xl mx-auto">
+
+    <div
+      class="bg-surface p-6 md:p-8 rounded-2xl shadow-2xl border border-gray-800 mb-12 max-w-2xl mx-auto transition-all duration-300 hover:border-gray-700">
+      <h2 class="text-2xl font-bold mb-6 text-gray-100 flex items-center gap-2">
+        <svg class="w-6 h-6 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        Track a New Game
+      </h2>
+
+      <form id="add-game-form" class="flex flex-col gap-5">
+        <div class="flex flex-col gap-2">
+          <label for="game-title" class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Game
+            Title</label>
+          <input type="text" id="game-title" placeholder="e.g., Sifu or Batman: Arkham" required
+            class="px-4 py-3 bg-gray-900 text-white rounded-lg border border-gray-700 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-colors w-full placeholder-gray-600">
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <label for="game-achievements"
+            class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Achievements</label>
+          <textarea id="game-achievements" rows="3" placeholder="Defeat Fajar&#10;Defeat Sean" required
+            class="px-4 py-3 bg-gray-900 text-white rounded-lg border border-gray-700 focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand transition-colors w-full resize-y placeholder-gray-600 leading-relaxed"></textarea>
+        </div>
+
         <button type="submit"
-          style="padding: 0.7rem; background: #bb86fc; color: #000; font-weight: bold; border: none; border-radius: 4px; cursor: pointer;">Add
-          Game</button>
+          class="mt-2 bg-brand hover:bg-purple-400 text-gray-900 font-bold py-3 px-6 rounded-lg shadow-lg transform transition-all duration-200 hover:-translate-y-1 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-brand">
+          Add to Board
+        </button>
       </form>
     </div>
 
-    <div id="game-container" class="grid-container">
+    <div id="game-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     </div>
+
   </main>
 
-  <div id="toast" class="toast"></div>
+  <div id="toast"
+    class="fixed bottom-6 right-6 bg-success text-gray-900 px-6 py-4 rounded-lg font-bold shadow-2xl transform transition-all duration-300 translate-y-24 opacity-0 z-50 flex items-center gap-3">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+    </svg>
+    <span id="toast-message">Success!</span>
+  </div>
 
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>

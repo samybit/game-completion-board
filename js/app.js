@@ -62,7 +62,13 @@ class GameManager {
             const gameCard = document.createElement('div');
             gameCard.className = 'game-card';
             gameCard.innerHTML = `
-                <h2>${game.title} <span class="progress">${progress}%</span></h2>
+                <h2>
+                ${game.title} 
+                    <div>
+                        <span class="progress" style="margin-right: 10px;">${progress}%</span>
+                        <button onclick="app.deleteGame(${game.id})" style="background: #cf6679; color: #000; border: none; padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Delete</button>
+                    </div>
+                </h2>
                 <div class="progress-bar-bg">
                     <div class="progress-bar-fill" style="width: ${progress}%"></div>
                 </div>
@@ -121,6 +127,26 @@ class GameManager {
             achievementsInput.value = '';
         } catch (error) {
             console.error("Error adding game:", error);
+        }
+    }
+
+    async deleteGame(gameId) {
+        // Ask for confirmation before deleting
+        if (!confirm("Are you sure you want to delete this game?")) return;
+
+        try {
+            // Send the DELETE request to Flask
+            await fetch(`/api/games/${gameId}`, {
+                method: 'DELETE'
+            });
+
+            // Remove the game from our local array
+            this.games = this.games.filter(game => game.id !== gameId);
+
+            // Update the UI
+            this.render();
+        } catch (error) {
+            console.error("Error deleting game:", error);
         }
     }
 }

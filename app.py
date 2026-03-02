@@ -95,6 +95,17 @@ def add_game():
     return jsonify({"id": new_id, "title": title, "achievements": data["achievements"]})
 
 
+@app.route("/api/games/<int:game_id>", methods=["DELETE"])
+def delete_game(game_id):
+    conn = sqlite3.connect("games.db")
+    c = conn.cursor()
+    c.execute("DELETE FROM games WHERE id = ?", (game_id,))
+    conn.commit()
+    conn.close()
+
+    return jsonify({"status": "deleted", "id": game_id})
+
+
 if __name__ == "__main__":
     init_db()
     app.run(debug=True)

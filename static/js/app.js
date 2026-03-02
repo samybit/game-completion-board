@@ -50,7 +50,7 @@ class GameManager {
     }
 
     // DOM MANIPULATION
-    render() {
+    render(newGameId = null) {
         const container = document.getElementById('game-container');
         if (!container) return;
 
@@ -63,8 +63,11 @@ class GameManager {
             const barColorClass = progress === 100 ? 'bg-success shadow-[0_0_10px_#03dac6]' : 'bg-brand';
 
             const gameCard = document.createElement('div');
+
+            const isNew = game.id === newGameId;
+
             // Tailwind Card Styling with hover lift
-            gameCard.className = 'bg-surface p-6 rounded-xl shadow-lg border border-gray-800 flex flex-col h-full transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-gray-600';
+            gameCard.className = `relative bg-surface p-6 rounded-xl shadow-lg border border-gray-800 flex flex-col h-full transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-gray-600 ${isNew ? 'slash-drop-animation' : ''}`;
 
             gameCard.innerHTML = `
                 <div class="flex justify-between items-start mb-4">
@@ -138,13 +141,15 @@ class GameManager {
                     this.games[existingIndex] = savedGame;
                 }
                 if (this.showToast) this.showToast("Achievements merged into existing game!");
+                // Redraw normally without the slash animation since it already exists
+                this.render();
             } else {
                 // Add the new game to our local array
                 this.games.push(savedGame);
                 if (this.showToast) this.showToast("New game successfully added!");
+                // Pass the new ID to trigger the sword slash and drop!
+                this.render(savedGame.id);
             }
-
-            this.render();
 
             // Clear the form
             titleInput.value = '';

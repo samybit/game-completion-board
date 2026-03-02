@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Completion Board</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <header>
+    <h1>Completion Board</h1>
+  </header>
+
+  <main>
+    <div class="form-container" style="background: #1e1e1e; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+      <h2 style="margin-bottom: 1rem;">Add a New Game</h2>
+      <form id="add-game-form" style="display: flex; flex-direction: column; gap: 1rem;">
+        <input type="text" id="game-title" placeholder="Game Title (e.g., Sifu or Batman: Arkham)" required
+          style="padding: 0.5rem; background: #333; color: white; border: none; border-radius: 4px;">
+        <textarea id="game-achievements" rows="4" placeholder="List achievements here (press Enter for a new line)"
+          required
+          style="padding: 0.5rem; background: #333; color: white; border: none; border-radius: 4px;"></textarea>
+        <button type="submit"
+          style="padding: 0.7rem; background: #bb86fc; color: #000; font-weight: bold; border: none; border-radius: 4px; cursor: pointer;">Add
+          Game</button>
+      </form>
+    </div>
+
+    <div id="game-container" class="grid-container">
+    </div>
+  </main>
+
+  <script src="js/app.js"></script>
+</body>
+
+</html>

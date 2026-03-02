@@ -1,0 +1,68 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: #121212;
+  color: #e0e0e0;
+  padding: 2rem;
+}
+
+header h1 {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #bb86fc;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.game-card {
+  background: #1e1e1e;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+.game-card h2 {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+}
+.game-card h2 .progress {
+  color: #03dac6;
+}
+.game-card .progress-bar-bg {
+  background: #333;
+  border-radius: 4px;
+  height: 10px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+.game-card .progress-bar-bg .progress-bar-fill {
+  background: #03dac6;
+  height: 100%;
+  transition: width 0.3s ease;
+}
+.game-card .achievement-list {
+  list-style: none;
+}
+.game-card .achievement-list li {
+  padding: 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid #333;
+}
+.game-card .achievement-list li.completed {
+  text-decoration: line-through;
+  color: gray;
+}
+
+/*# sourceMappingURL=style.css.map */

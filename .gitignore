@@ -1,0 +1,20 @@
+# Python / Flask
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+
+# Database (Never commit your local database to GitHub)
+*.db
+*.sqlite3
+
+# Node / Sass (If you used npm to install anything)
+node_modules/
+.sass-cache/
+*.css.map
+
+# Linux / OS specific
+.DS_Store
+Thumbs.db

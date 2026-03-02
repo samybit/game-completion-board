@@ -2,13 +2,25 @@
 class GameManager {
     constructor() {
         this.games = [];
-        this.loadData(); // Fetch data from Flask sqlite
+        this.loadData();
 
         // Listen for form submission
         const form = document.getElementById('add-game-form');
         if (form) {
             // use bind(this) so 'this' inside addGame still refers to the GameManager
             form.addEventListener('submit', this.addGame.bind(this));
+
+            // Listen for Ctrl + Enter in the textarea
+            const achievementsInput = document.getElementById('game-achievements');
+            if (achievementsInput) {
+                achievementsInput.addEventListener('keydown', (event) => {
+                    // Check if Ctrl (or Cmd on Mac) AND Enter are pressed
+                    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                        event.preventDefault(); // Stop it from just adding a new line
+                        form.requestSubmit();   // Fire the form submission natively
+                    }
+                });
+            }
         }
     }
 

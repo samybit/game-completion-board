@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Mocha Tests - Game Progress Logic</title>
-  <link href="https://unpkg.com/mocha/mocha.css" rel="stylesheet" />
+  <link href="{{ url_for('static', filename='vendor/mocha.css') }}" rel="stylesheet" />
   <style>
     body {
       background-color: #121212;
@@ -28,10 +28,11 @@
 <body>
   <div id="mocha"></div>
 
-  <script src="https://unpkg.com/chai/chai.js"></script>
-  <script src="https://unpkg.com/mocha/mocha.js"></script>
+  <script src="{{ url_for('static', filename='vendor/chai.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/mocha.js') }}"></script>
 
   <script>
+    // 3. Setup Mocha and explicitly attach expect to the global window object
     mocha.setup('bdd');
     window.expect = chai.expect;
   </script>
@@ -41,6 +42,7 @@
   <script src="{{ url_for('static', filename='js/test.js') }}"></script>
 
   <script>
+    // Run the tests
     mocha.run();
   </script>
 </body>

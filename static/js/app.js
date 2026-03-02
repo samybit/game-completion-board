@@ -122,6 +122,8 @@ class GameManager {
             this.games.push(savedGame);
             this.render();
 
+            this.showToast("Game successfully added!");
+
             // Clear the form
             titleInput.value = '';
             achievementsInput.value = '';
@@ -145,9 +147,22 @@ class GameManager {
 
             // Update the UI
             this.render();
+
+            this.showToast("Game deleted.");
         } catch (error) {
             console.error("Error deleting game:", error);
         }
+    }
+
+    showToast(message) {
+        const toast = document.getElementById('toast');
+        toast.innerText = message;
+        toast.classList.add('show');
+
+        // Hide it after 3 seconds
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
     }
 }
 

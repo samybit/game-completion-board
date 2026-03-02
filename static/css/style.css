@@ -65,4 +65,27 @@ header h1 {
   color: gray;
 }
 
+.toast {
+  visibility: hidden;
+  min-width: 250px;
+  background-color: #03dac6;
+  color: #121212;
+  text-align: center;
+  border-radius: 4px;
+  padding: 16px;
+  position: fixed;
+  z-index: 1000;
+  right: 30px;
+  bottom: 30px;
+  font-weight: bold;
+  opacity: 0;
+  transition: opacity 0.3s, visibility 0.3s, transform 0.3s;
+  transform: translateY(20px);
+}
+.toast.show {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+}
+
 /*# sourceMappingURL=style.css.map */

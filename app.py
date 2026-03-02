@@ -78,21 +78,72 @@ def update_game(game_id):
 @app.route("/api/games", methods=["POST"])
 def add_game():
     data = request.json
-    title = data["title"]
-    achievements_str = json.dumps(data["achievements"])
+    # Split by any whitespace and rejoin with a single space
+    title = " ".join(data["title"].split())
+    new_achievements = data["achievements"]
 
     conn = sqlite3.connect("games.db")
     c = conn.cursor()
-    c.execute(
-        "INSERT INTO games (title, achievements) VALUES (?, ?)",
-        (title, achievements_str),
-    )
-    new_id = c.lastrowid  # Get the ID of the game we just inserted
-    conn.commit()
-    conn.close()
 
-    # Return the new game so JS can add it to the UI immediately
-    return jsonify({"id": new_id, "title": title, "achievements": data["achievements"]})
+    # Check if the game already exists (case-insensitive)
+    c.execute(
+        "SELECT id, achievements FROM games WHERE LOWER(title) = LOWER(?)", (title,)
+    )
+    existing_game = c.fetchone()
+
+    if existing_game:
+        # GAME EXISTS: Merge the achievements
+        game_id = existing_game[0]
+        existing_achievements = json.loads(existing_game[1])
+
+        # Find the highest achievement ID so we don't create duplicates
+        max_id = 0
+        if existing_achievements:
+            max_id = max([ach["id"] for ach in existing_achievements])
+
+        # Assign new unique IDs to the incoming achievements
+        for ach in new_achievements:
+            max_id += 1
+            ach["id"] = max_id
+            existing_achievements.append(ach)
+
+        achievements_str = json.dumps(existing_achievements)
+
+        c.execute(
+            "UPDATE games SET achievements = ? WHERE id = ?",
+            (achievements_str, game_id),
+        )
+        conn.commit()
+        conn.close()
+
+        return jsonify(
+            {
+                "id": game_id,
+                "title": title,
+                "achievements": existing_achievements,
+                "is_update": True,  # Tell JavaScript this was an update
+            }
+        )
+
+    else:
+        # BRAND NEW GAME: Insert normally
+        achievements_str = json.dumps(new_achievements)
+        c.execute(
+            "INSERT INTO games (title, achievements) VALUES (?, ?)",
+            (title, achievements_str),
+        )
+        new_id = c.lastrowid
+        conn.commit()
+        conn.close()
+
+        return jsonify(
+            {
+                "id": new_id,
+                "title": title,
+                "achievements": new_achievements,
+                "is_update": False,
+            }
+        )
 
 
 @app.route("/api/games/<int:game_id>", methods=["DELETE"])

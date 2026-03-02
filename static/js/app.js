@@ -118,11 +118,20 @@ class GameManager {
 
             const savedGame = await response.json();
 
-            // Add the new game to our local array and re-render the UI
-            this.games.push(savedGame);
-            this.render();
+            if (savedGame.is_update) {
+                // If it's an update, find the existing game and replace its data
+                const existingIndex = this.games.findIndex(g => g.id === savedGame.id);
+                if (existingIndex !== -1) {
+                    this.games[existingIndex] = savedGame;
+                }
+                if (this.showToast) this.showToast("Achievements merged into existing game!");
+            } else {
+                // Add the new game to our local array
+                this.games.push(savedGame);
+                if (this.showToast) this.showToast("New game successfully added!");
+            }
 
-            this.showToast("Game successfully added!");
+            this.render();
 
             // Clear the form
             titleInput.value = '';

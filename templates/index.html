@@ -137,6 +137,43 @@
       </form>
     </div>
 
+    <div
+      class="bg-surface p-6 md:p-8 rounded-2xl shadow-2xl border border-gray-800 mb-12 max-w-2xl mx-auto transition-all duration-300 hover:border-gray-700">
+      <h2 class="text-2xl font-bold mb-6 text-gray-100 flex items-center gap-2">
+        <svg class="w-6 h-6 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z">
+          </path>
+        </svg>
+        AI Gaming Assistant
+      </h2>
+
+      <div id="chat-history"
+        class="bg-gray-900 rounded-lg p-4 mb-4 h-64 overflow-y-auto flex flex-col gap-3 border border-gray-700 custom-scrollbar">
+        <div class="flex items-start gap-3">
+          <div
+            class="w-8 h-8 rounded-full bg-success flex items-center justify-center text-gray-900 font-bold shrink-0">AI
+          </div>
+          <div class="bg-gray-800 rounded-lg rounded-tl-none p-3 text-sm text-gray-200">
+            Hello! I can tell you about achievements for any game. What are you playing?
+          </div>
+        </div>
+      </div>
+
+      <form id="ai-chat-form" class="flex gap-3 relative">
+        <input type="text" id="ai-chat-input" placeholder="e.g., What are the achievements for Sifu?" autocomplete="off"
+          class="px-4 py-3 bg-gray-900 text-white rounded-lg border border-gray-700 focus:outline-none focus:border-success focus:ring-1 focus:ring-success transition-colors w-full placeholder-gray-600 pr-12">
+
+        <button type="submit" id="ai-send-btn"
+          class="absolute right-2 top-2 bg-success hover:bg-teal-400 text-gray-900 font-bold p-2 rounded shadow transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-success">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8">
+            </path>
+          </svg>
+        </button>
+      </form>
+    </div>
+
     <div id="game-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     </div>
 

@@ -1,5 +1,8 @@
 # Game Completion Board
 
+![Structure Preview](./structure.jpg)
+![Dashboard Preview](./demo.png)
+
 A full-stack web application designed to track video game progression and achievements. Users can add games, log specific milestones, and visually track their completion percentage through a dynamic, responsive dashboard.
 
 ## Features

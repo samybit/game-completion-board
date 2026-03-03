@@ -18,3 +18,5 @@ node_modules/
 # Linux / OS specific
 .DS_Store
 Thumbs.db
+
+.env

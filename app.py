@@ -1,6 +1,13 @@
 from flask import Flask, render_template, request, jsonify
 import sqlite3
 import json
+import os
+import requests
+from dotenv import load_dotenv
+
+
+load_dotenv()
+RAWG_API_KEY = os.getenv("RAWG_API_KEY")
 
 app = Flask(__name__)
 

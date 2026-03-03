@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 import sqlite3
 import json
+from openai import OpenAI
 import os
 import requests
 from dotenv import load_dotenv
@@ -10,6 +11,8 @@ load_dotenv()
 RAWG_API_KEY = os.getenv("RAWG_API_KEY")
 
 app = Flask(__name__)
+
+client = OpenAI()
 
 
 def init_db():
@@ -162,6 +165,47 @@ def delete_game(game_id):
     conn.close()
 
     return jsonify({"status": "deleted", "id": game_id})
+
+
+@app.route("/api/chat", methods=["POST"])
+def chat_with_ai():
+    data = request.json
+    user_message = data.get("message")
+
+    # Receive past history so the AI remembers the conversation
+    chat_history = data.get("history", [])
+
+    if not user_message:
+        return jsonify({"error": "Message is required"}), 400
+
+    # 1. System Prompt: Tell the AI who it is
+    messages = [
+        {
+            "role": "system",
+            "content": "You are a helpful video game assistant. Your job is to list achievements for games or answer questions about specific game milestones. Keep answers concise and format lists clearly using markdown bullet points.",
+        }
+    ]
+
+    # 2. Add the past conversation (the 'State')
+    messages.extend(chat_history)
+
+    # 3. Add the user's newest message
+    messages.append({"role": "user", "content": user_message})
+
+    try:
+        # 4. Make the call to OpenAI (using the cheaper, faster model)
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=messages,
+            max_tokens=250,  # Limit length so it doesn't ramble
+        )
+
+        ai_reply = response.choices[0].message.content
+        return jsonify({"reply": ai_reply})
+
+    except Exception as e:
+        print(f"OpenAI Error: {e}")
+        return jsonify({"error": "Failed to connect to the AI."}), 500
 
 
 @app.route("/test")

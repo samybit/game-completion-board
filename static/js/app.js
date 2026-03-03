@@ -3,6 +3,7 @@ class GameManager {
     constructor() {
         this.games = [];
         this.loadData();
+        this.setupThumbnailFetcher();
 
         // Listen for form submission
         const form = document.getElementById('add-game-form');
@@ -207,6 +208,51 @@ class GameManager {
             toast.classList.remove('translate-y-0', 'opacity-100');
             toast.classList.add('translate-y-24', 'opacity-0');
         }, 3000);
+    }
+
+    setupThumbnailFetcher() {
+        const titleInput = document.getElementById('game-title');
+        const thumbnailImg = document.getElementById('game-thumbnail');
+        let debounceTimer;
+
+        const rawgApiKey = 'YOUR_RAWG_API_KEY';
+
+        if (titleInput && thumbnailImg) {
+            titleInput.addEventListener('input', (event) => {
+                // Clear the timer every time a key is pressed
+                clearTimeout(debounceTimer);
+                const query = event.target.value.trim();
+
+                // Hide the image if the box is empty or word is too short
+                if (query.length < 3) {
+                    thumbnailImg.classList.add('hidden');
+                    return;
+                }
+
+                // Show a loading state
+                thumbnailImg.src = "https://placehold.co/32?text=...";
+                thumbnailImg.classList.remove('hidden');
+
+                // Wait 500ms after the user stops typing
+                debounceTimer = setTimeout(async () => {
+                    try {
+                        const response = await fetch(`https://api.rawg.io/api/games?key=${rawgApiKey}&search=${encodeURIComponent(query)}&page_size=1`);
+                        const data = await response.json();
+
+                        // If the API found the game and it has an image
+                        if (data.results && data.results.length > 0 && data.results[0].background_image) {
+                            thumbnailImg.src = data.results[0].background_image;
+                            thumbnailImg.classList.remove('animate-pulse'); // Stop loading animation
+                        } else {
+                            thumbnailImg.classList.add('hidden'); // Hide if no game found
+                        }
+                    } catch (error) {
+                        console.error("Error fetching game art:", error);
+                        thumbnailImg.classList.add('hidden');
+                    }
+                }, 500);
+            });
+        }
     }
 }
 

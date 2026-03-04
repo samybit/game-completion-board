@@ -4,19 +4,17 @@ import json
 import os
 import requests
 from dotenv import load_dotenv
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
 load_dotenv()
 
-# --- 1. Setup Gemini AI ---
+# --- 1. Setup Modern Gemini AI Client ---
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
-    # Set the System Prompt directly in the model
-    model = genai.GenerativeModel(
-        "gemini-2.5-flash",
-        system_instruction="You are a helpful video game assistant. Your job is to list achievements for games or answer questions about specific game milestones. Keep answers concise and format lists clearly using markdown bullet points.",
-    )
+    gemini_client = genai.Client(api_key=GEMINI_API_KEY)
+else:
+    gemini_client = None
 
 app = Flask(__name__)
 
@@ -185,7 +183,7 @@ def delete_game(game_id):
     return jsonify({"status": "deleted", "id": game_id})
 
 
-# --- 3. Chat Route using Gemini ---
+# --- 2. Fixed Chat Route using the modern SDK ---
 @app.route("/api/chat", methods=["POST"])
 def chat_with_ai():
     data = request.json
@@ -197,16 +195,31 @@ def chat_with_ai():
     if not user_message:
         return jsonify({"error": "Message is required"}), 400
 
+    if not gemini_client:
+        return jsonify({"error": "AI is not configured."}), 500
+
     try:
-        # Convert your Javascript history array into the format Gemini expects
-        gemini_history = []
+        # Format history for the new SDK
+        formatted_history = []
         for msg in chat_history:
             # Gemini uses 'user' and 'model' instead of 'user' and 'assistant'
             role = "user" if msg["role"] == "user" else "model"
-            gemini_history.append({"role": role, "parts": [msg["content"]]})
+            formatted_history.append(
+                types.Content(
+                    role=role, parts=[types.Part.from_text(text=msg["content"])]
+                )
+            )
 
-        # Load the memory and send the new message
-        chat = model.start_chat(history=gemini_history)
+        # Create the chat session using the active 2.5 model
+        chat = gemini_client.chats.create(
+            model="gemini-2.5-flash",
+            config=types.GenerateContentConfig(
+                system_instruction="You are a helpful video game assistant. Your job is to list achievements for games or answer questions about specific game milestones. Keep answers concise and format lists clearly using bullet points."
+            ),
+            history=formatted_history,
+        )
+
+        # Send the user's new message
         response = chat.send_message(user_message)
 
         return jsonify({"reply": response.text})

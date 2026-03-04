@@ -214,7 +214,7 @@ def chat_with_ai():
         chat = gemini_client.chats.create(
             model="gemini-2.5-flash",
             config=types.GenerateContentConfig(
-                system_instruction="You are a helpful video game assistant. Your job is to list achievements for games or answer questions about specific game milestones. Keep answers concise and format lists clearly using bullet points."
+                system_instruction="You are a helpful video game assistant. Your job is to list achievements for games or answer questions about specific game milestones. Keep answers concise and format lists clearly using markdown bullet points."
             ),
             history=formatted_history,
         )

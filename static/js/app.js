@@ -276,8 +276,18 @@ class AIChatbot {
         const msgDiv = document.createElement('div');
         msgDiv.className = `flex items-start gap-3 ${role === 'user' ? 'justify-end' : ''}`;
 
-        // Simple Markdown parsing for bullet points (since the AI might return them)
-        const formattedText = text.replace(/\n- /g, '<br>• ');
+        // Markdown parsing for bullet points (since the AI might return them)
+        // 1. Make **text** bold and bright white
+        let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<span class="font-bold text-gray-100">$1</span>');
+
+        // 2. Turn new line asterisks or dashes into styled purple bullet points
+        formattedText = formattedText.replace(/\n[\*\-]\s/g, '<br><span class="text-brand inline-block mt-2 mr-2 font-bold">•</span>');
+
+        // 3. Catch a bullet point if it is the very first character in the message
+        formattedText = formattedText.replace(/^[\*\-]\s/g, '<span class="text-brand inline-block mr-2 font-bold">•</span>');
+
+        // 4. Convert any remaining normal newlines to <br> tags so paragraphs don't merge
+        formattedText = formattedText.replace(/\n/g, '<br>');
 
         if (role === 'user') {
             msgDiv.innerHTML = `

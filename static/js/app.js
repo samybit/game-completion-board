@@ -353,14 +353,11 @@ class AIChatbot {
     }
 }
 
-// Initialize the chatbot
-document.addEventListener('DOMContentLoaded', () => {
-    new AIChatbot();
-});
+// Initialize the chatbot immediately
+const chatbot = new AIChatbot();
 
-
-// Initialize the app
+// Initialize the app immediately
 const app = new GameManager();
+
 // Expose calculating logic for Mocha testing
 window.calculateProgress = app.calculateProgress;
-document.addEventListener('DOMContentLoaded', () => app.render());

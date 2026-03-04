@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 
 load_dotenv()
-RAWG_API_KEY = os.getenv("RAWG_API_KEY")
+# We no longer need RAWG, but we DO need your OpenAI key!
 
 app = Flask(__name__)
 
@@ -19,26 +19,13 @@ def init_db():
     # This creates the games.db file if it doesn't exist
     conn = sqlite3.connect("games.db")
     c = conn.cursor()
-    # We will store the achievements as a JSON string in the database for simplicity right now
+    # image_url column is now included!
     c.execute("""CREATE TABLE IF NOT EXISTS games 
                  (id INTEGER PRIMARY KEY AUTOINCREMENT, 
                   title TEXT, 
-                  achievements TEXT)""")
-
-    # Insert a default game if the table is empty
-    c.execute("SELECT COUNT(*) FROM games")
-    if c.fetchone()[0] == 0:
-        default_achievements = json.dumps(
-            [
-                {"id": 1, "name": "Defeat Kuze", "completed": True},
-                {"id": 2, "name": "Real Estate Royale", "completed": False},
-            ]
-        )
-        c.execute(
-            "INSERT INTO games (title, achievements) VALUES (?, ?)",
-            ("Yakuza 0", default_achievements),
-        )
-        conn.commit()
+                  achievements TEXT,
+                  image_url TEXT)""")
+    conn.commit()
     conn.close()
 
 
@@ -48,11 +35,31 @@ def index():
     return render_template("index.html")
 
 
+# --- NEW: CheapShark API Proxy (No API Key Required!) ---
+@app.route("/api/search_image")
+def search_image():
+    query = request.args.get("q")
+    if not query:
+        return jsonify({"image_url": None})
+
+    # CheapShark tracks PC game deals and provides free cover art
+    url = f"https://www.cheapshark.com/api/1.0/games?title={query}&limit=1"
+    try:
+        resp = requests.get(url)
+        data = resp.json()
+        if data and len(data) > 0:
+            return jsonify({"image_url": data[0].get("thumb")})
+    except Exception as e:
+        print("Error fetching from CheapShark:", e)
+
+    return jsonify({"image_url": None})
+
+
 @app.route("/api/games", methods=["GET"])
 def get_games():
     conn = sqlite3.connect("games.db")
     c = conn.cursor()
-    c.execute("SELECT id, title, achievements FROM games")
+    c.execute("SELECT id, title, achievements, image_url FROM games")
     rows = c.fetchall()
     conn.close()
 
@@ -63,7 +70,8 @@ def get_games():
             {
                 "id": row[0],
                 "title": row[1],
-                "achievements": json.loads(row[2]),  # Convert string back to JSON
+                "achievements": json.loads(row[2]),
+                "image_url": row[3],
             }
         )
     return jsonify(games)
@@ -91,6 +99,7 @@ def add_game():
     # Split by any whitespace and rejoin with a single space
     title = " ".join(data["title"].split())
     new_achievements = data["achievements"]
+    image_url = data.get("image_url", "")
 
     conn = sqlite3.connect("games.db")
     c = conn.cursor()
@@ -106,12 +115,11 @@ def add_game():
         game_id = existing_game[0]
         existing_achievements = json.loads(existing_game[1])
 
-        # Find the highest achievement ID so we don't create duplicates
-        max_id = 0
-        if existing_achievements:
-            max_id = max([ach["id"] for ach in existing_achievements])
-
-        # Assign new unique IDs to the incoming achievements
+        max_id = (
+            max([ach["id"] for ach in existing_achievements])
+            if existing_achievements
+            else 0
+        )
         for ach in new_achievements:
             max_id += 1
             ach["id"] = max_id
@@ -120,8 +128,8 @@ def add_game():
         achievements_str = json.dumps(existing_achievements)
 
         c.execute(
-            "UPDATE games SET achievements = ? WHERE id = ?",
-            (achievements_str, game_id),
+            "UPDATE games SET achievements = ?, image_url = ? WHERE id = ?",
+            (achievements_str, image_url, game_id),
         )
         conn.commit()
         conn.close()
@@ -131,7 +139,8 @@ def add_game():
                 "id": game_id,
                 "title": title,
                 "achievements": existing_achievements,
-                "is_update": True,  # Tell JavaScript this was an update
+                "image_url": image_url,
+                "is_update": True,
             }
         )
 
@@ -139,8 +148,8 @@ def add_game():
         # BRAND NEW GAME: Insert normally
         achievements_str = json.dumps(new_achievements)
         c.execute(
-            "INSERT INTO games (title, achievements) VALUES (?, ?)",
-            (title, achievements_str),
+            "INSERT INTO games (title, achievements, image_url) VALUES (?, ?, ?)",
+            (title, achievements_str, image_url),
         )
         new_id = c.lastrowid
         conn.commit()
@@ -151,6 +160,7 @@ def add_game():
                 "id": new_id,
                 "title": title,
                 "achievements": new_achievements,
+                "image_url": image_url,
                 "is_update": False,
             }
         )
@@ -195,9 +205,7 @@ def chat_with_ai():
     try:
         # 4. Make the call to OpenAI (using the cheaper, faster model)
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=messages,
-            max_tokens=250,  # Limit length so it doesn't ramble
+            model="gpt-3.5-turbo", messages=messages, max_tokens=250
         )
 
         ai_reply = response.choices[0].message.content

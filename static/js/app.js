@@ -17,8 +17,8 @@ class GameManager {
                 achievementsInput.addEventListener('keydown', (event) => {
                     // Check if Ctrl (or Cmd on Mac) AND Enter are pressed
                     if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-                        event.preventDefault(); // Stop it from just adding a new line
-                        form.requestSubmit();   // Fire the form submission natively
+                        event.preventDefault();
+                        form.requestSubmit();
                     }
                 });
             }
@@ -46,9 +46,9 @@ class GameManager {
         // Find the game and achievement in our local state
         const game = this.games.find(g => g.id === gameId);
         const achievement = game.achievements.find(a => a.id === achId);
-        achievement.completed = !achievement.completed; // Toggle it
+        achievement.completed = !achievement.completed;
 
-        this.render(); // Update the UI immediately
+        this.render();
 
         // Send the update to Flask/SQLite
         try {
@@ -83,8 +83,11 @@ class GameManager {
             gameCard.className = `relative bg-surface p-6 rounded-xl shadow-lg border border-gray-800 flex flex-col h-full transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-gray-600 ${isNew ? 'slash-drop-animation' : ''}`;
 
             gameCard.innerHTML = `
-                <div class="flex justify-between items-start mb-4">
-                    <h2 class="text-xl font-bold text-gray-100 leading-tight">${game.title}</h2>
+                <div class="flex justify-between items-start mb-4 gap-4">
+                    <div class="flex items-center gap-3">
+                        ${game.image_url ? `<img src="${game.image_url}" alt="${game.title}" class="w-12 h-12 rounded-lg object-cover border border-gray-700 shadow-md">` : ''}
+                        <h2 class="text-xl font-bold text-gray-100 leading-tight">${game.title}</h2>
+                    </div>
                     <button onclick="app.deleteGame(${game.id})" class="text-gray-500 hover:text-red-400 transition-colors p-1" title="Delete Game">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     </button>
@@ -117,12 +120,17 @@ class GameManager {
     }
 
     async addGame(event) {
-        event.preventDefault(); // Stop the page from reloading
+        event.preventDefault();
 
         const titleInput = document.getElementById('game-title');
         const achievementsInput = document.getElementById('game-achievements');
+        const thumbnailImg = document.getElementById('game-thumbnail');
 
-        // Split the textarea by new lines, remove empty lines, and format as objects
+        let finalImageUrl = "";
+        if (thumbnailImg && !thumbnailImg.classList.contains('hidden') && !thumbnailImg.src.includes('placehold')) {
+            finalImageUrl = thumbnailImg.src;
+        }
+
         const achievementsList = achievementsInput.value
             .split('\n')
             .filter(line => line.trim() !== '')
@@ -134,7 +142,8 @@ class GameManager {
 
         const newGameData = {
             title: titleInput.value.trim(),
-            achievements: achievementsList
+            achievements: achievementsList,
+            image_url: finalImageUrl
         };
 
         try {
@@ -153,20 +162,19 @@ class GameManager {
                 if (existingIndex !== -1) {
                     this.games[existingIndex] = savedGame;
                 }
-                if (this.showToast) this.showToast("Achievements merged into existing game!");
-                // Redraw normally without the slash animation since it already exists
+                this.showToast("Achievements merged into existing game!");
                 this.render();
             } else {
                 // Add the new game to our local array
                 this.games.push(savedGame);
-                if (this.showToast) this.showToast("New game successfully added!");
-                // Pass the new ID to trigger the sword slash and drop!
+                this.showToast("New game successfully added!");
                 this.render(savedGame.id);
             }
 
             // Clear the form
             titleInput.value = '';
             achievementsInput.value = '';
+            if (thumbnailImg) thumbnailImg.classList.add('hidden');
         } catch (error) {
             console.error("Error adding game:", error);
         }
@@ -177,12 +185,7 @@ class GameManager {
         if (!confirm("Are you sure you want to delete this game?")) return;
 
         try {
-            // Send the DELETE request to Flask
-            await fetch(`/api/games/${gameId}`, {
-                method: 'DELETE'
-            });
-
-            // Remove the game from our local array
+            await fetch(`/api/games/${gameId}`, { method: 'DELETE' });
             this.games = this.games.filter(game => game.id !== gameId);
 
             // Update the UI
@@ -215,8 +218,6 @@ class GameManager {
         const thumbnailImg = document.getElementById('game-thumbnail');
         let debounceTimer;
 
-        const rawgApiKey = 'YOUR_RAWG_API_KEY';
-
         if (titleInput && thumbnailImg) {
             titleInput.addEventListener('input', (event) => {
                 // Clear the timer every time a key is pressed
@@ -236,15 +237,14 @@ class GameManager {
                 // Wait 500ms after the user stops typing
                 debounceTimer = setTimeout(async () => {
                     try {
-                        const response = await fetch(`https://api.rawg.io/api/games?key=${rawgApiKey}&search=${encodeURIComponent(query)}&page_size=1`);
+                        const response = await fetch(`/api/search_image?q=${encodeURIComponent(query)}`);
                         const data = await response.json();
 
-                        // If the API found the game and it has an image
-                        if (data.results && data.results.length > 0 && data.results[0].background_image) {
-                            thumbnailImg.src = data.results[0].background_image;
-                            thumbnailImg.classList.remove('animate-pulse'); // Stop loading animation
+                        if (data.image_url) {
+                            thumbnailImg.src = data.image_url;
+                            thumbnailImg.classList.remove('animate-pulse');
                         } else {
-                            thumbnailImg.classList.add('hidden'); // Hide if no game found
+                            thumbnailImg.classList.add('hidden');
                         }
                     } catch (error) {
                         console.error("Error fetching game art:", error);
@@ -328,7 +328,7 @@ class AIChatbot {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     message: userText,
-                    history: this.conversationHistory // Pass the state
+                    history: this.conversationHistory
                 })
             });
 

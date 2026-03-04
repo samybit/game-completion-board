@@ -1,25 +1,31 @@
 from flask import Flask, render_template, request, jsonify
 import sqlite3
 import json
-from openai import OpenAI
 import os
 import requests
 from dotenv import load_dotenv
-
+import google.generativeai as genai
 
 load_dotenv()
-# We no longer need RAWG, but we DO need your OpenAI key!
+
+# --- 1. Setup Gemini AI ---
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+    # Set the System Prompt directly in the model
+    model = genai.GenerativeModel(
+        "gemini-2.5-flash",
+        system_instruction="You are a helpful video game assistant. Your job is to list achievements for games or answer questions about specific game milestones. Keep answers concise and format lists clearly using markdown bullet points.",
+    )
 
 app = Flask(__name__)
 
-client = OpenAI()
-
 
 def init_db():
-    # This creates the games.db file if it doesn't exist
+    # Create games.db if doesn't exist
     conn = sqlite3.connect("games.db")
     c = conn.cursor()
-    # image_url column is now included!
+
     c.execute("""CREATE TABLE IF NOT EXISTS games 
                  (id INTEGER PRIMARY KEY AUTOINCREMENT, 
                   title TEXT, 
@@ -31,24 +37,26 @@ def init_db():
 
 @app.route("/")
 def index():
-    # Serve your index.html
     return render_template("index.html")
 
 
-# --- NEW: CheapShark API Proxy (No API Key Required!) ---
+# ---  CheapShark API ---
 @app.route("/api/search_image")
 def search_image():
     query = request.args.get("q")
     if not query:
         return jsonify({"image_url": None})
 
-    # CheapShark tracks PC game deals and provides free cover art
     url = f"https://www.cheapshark.com/api/1.0/games?title={query}&limit=1"
     try:
         resp = requests.get(url)
         data = resp.json()
         if data and len(data) > 0:
-            return jsonify({"image_url": data[0].get("thumb")})
+            img_url = data[0].get("thumb")
+            # FIX: CheapShark sometimes forgets the 'https:' part of the URL!
+            if img_url and img_url.startswith("//"):
+                img_url = "https:" + img_url
+            return jsonify({"image_url": img_url})
     except Exception as e:
         print("Error fetching from CheapShark:", e)
 
@@ -177,6 +185,7 @@ def delete_game(game_id):
     return jsonify({"status": "deleted", "id": game_id})
 
 
+# --- 3. Chat Route using Gemini ---
 @app.route("/api/chat", methods=["POST"])
 def chat_with_ai():
     data = request.json
@@ -188,31 +197,21 @@ def chat_with_ai():
     if not user_message:
         return jsonify({"error": "Message is required"}), 400
 
-    # 1. System Prompt: Tell the AI who it is
-    messages = [
-        {
-            "role": "system",
-            "content": "You are a helpful video game assistant. Your job is to list achievements for games or answer questions about specific game milestones. Keep answers concise and format lists clearly using markdown bullet points.",
-        }
-    ]
-
-    # 2. Add the past conversation (the 'State')
-    messages.extend(chat_history)
-
-    # 3. Add the user's newest message
-    messages.append({"role": "user", "content": user_message})
-
     try:
-        # 4. Make the call to OpenAI (using the cheaper, faster model)
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo", messages=messages, max_tokens=250
-        )
+        # Convert your Javascript history array into the format Gemini expects
+        gemini_history = []
+        for msg in chat_history:
+            # Gemini uses 'user' and 'model' instead of 'user' and 'assistant'
+            role = "user" if msg["role"] == "user" else "model"
+            gemini_history.append({"role": role, "parts": [msg["content"]]})
 
-        ai_reply = response.choices[0].message.content
-        return jsonify({"reply": ai_reply})
+        # Load the memory and send the new message
+        chat = model.start_chat(history=gemini_history)
+        response = chat.send_message(user_message)
 
+        return jsonify({"reply": response.text})
     except Exception as e:
-        print(f"OpenAI Error: {e}")
+        print(f"Gemini Error: {e}")
         return jsonify({"error": "Failed to connect to the AI."}), 500
 
 
